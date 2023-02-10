@@ -13,9 +13,48 @@ class DOMHelper {
     }
 }
 
-class Tooltip {}
+class Component {
+    constructor() {}
+    
+    render() {}
+
+    detachTooltip() {
+        if (this.element) {
+            this.element.remove();
+            // For older browsers you can use this instead of the line above.
+            // this.element.parentElement.removeChild(this.element);
+        }
+    }
+
+    attachTooltip() {
+        document.body.append(this.element);
+    }
+}
+
+class Tooltip extends Component {
+    constructor(closeNotifierFunction) {
+        super();
+        this.closeNotifier = closeNotifierFunction;
+        this.create();
+    }
+
+    closeTooltip() {
+        this.detachTooltip();
+        this.closeNotifier();
+    }
+
+    create() {
+        const tooltipElement = document.createElement('div');
+        tooltipElement.className = 'card';
+        tooltipElement.textContent = 'DUMMY!';
+        tooltipElement.addEventListener('click', this.closeTooltip.bind(this));
+        this.element = tooltipElement;
+    }
+}
 
 class ProjectItem {
+    hasActiveTooltip = false;
+
     constructor(id, updateProjectListFunction, type) {
         this.id = id;
         this.updateProjectListHandler = updateProjectListFunction;
@@ -24,7 +63,19 @@ class ProjectItem {
         this.connectSwitchButton(type);
     }
 
-    connectMoreInfoButton() {}
+    showMoreInfoHandler() {
+        if (this.hasActiveTooltip) return;
+        const tooltip = new Tooltip(() => { this.hasActiveTooltip = false; });
+        tooltip.attachTooltip();
+        this.hasActiveTooltip = true;
+    }
+
+    connectMoreInfoButton() {
+        const projectItemElement = document.getElementById(this.id);
+        const moreInfoButton = projectItemElement.querySelector('button:first-of-type');
+        moreInfoButton.addEventListener('click', this.showMoreInfoHandler.bind(this));
+
+    }
 
     connectSwitchButton(type) {
         const projectItemElement = document.getElementById(this.id);
@@ -48,7 +99,7 @@ class ProjectList {
 
         // CSS selector for all the items in the HTML.
         const projectItems = document.querySelectorAll(`#${type}-projects li`);
-        
+
         // Loop through all the items and create a new ProjectItem object.
         for (const projectItem of projectItems) {
             this.projects.push(new ProjectItem(projectItem.id, this.switchProject.bind(this), this.type));
