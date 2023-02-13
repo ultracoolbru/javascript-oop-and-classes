@@ -14,9 +14,16 @@ class DOMHelper {
 }
 
 class Component {
-    constructor() {}
-    
-    render() {}
+    constructor(hostElementId, insertBefore = false) {
+        if (hostElementId) {
+            this.hostElement = document.getElementById(hostElementId);
+        } else {
+            this.hostElement = document.body;
+        }
+        this.insertBefore = insertBefore;
+    }
+
+    render() { }
 
     detachTooltip() {
         if (this.element) {
@@ -27,12 +34,13 @@ class Component {
     }
 
     attachTooltip() {
-        document.body.append(this.element);
+        this.hostElement.insertAdjacentElement(this.insertBefore ? 'afterbegin' : 'beforeend', this.element);
     }
 }
 
 class Tooltip extends Component {
     constructor(closeNotifierFunction) {
+        // super('active-projects', true);
         super();
         this.closeNotifier = closeNotifierFunction;
         this.create();
